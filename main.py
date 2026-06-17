@@ -22,8 +22,8 @@ def read_services_path():
     return services
 
 def check_service(servers_ip, services):
+    services_status = []
     try:
-        services_status = []
         for ip in servers_ip:
             for service in services:
                 username = "egg"
@@ -31,18 +31,27 @@ def check_service(servers_ip, services):
                 password = "change"
                 client = paramiko.client.SSHClient()
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                client.connect(host, username=username, password=password)
+                client.connect(host, username=username, password=password, timeout=5)
                 stdin, stdout, stderr = client.exec_command(f"systemctl is-active {service}")
                 service_server = stdout.read().decode().strip()
                 services_status.append((
                     ip, service, service_server
                 ))
-        print(services_status)
     
     except:
-        print("Host Unreachable")
+        print(f"Host {ip} Unreachable")
+        services_status.append((
+            ip, "N/A", "Unreachable"
+        ))
+    return services_status
+
+def evaluate_service_status(services_status):
+    for ip, service, service_server in services_status:
+        if service_server != "Unreachable":
+            if service
 
         
 servers_ip = read_servers_path()
 services = read_services_path()
-check_service(servers_ip, services)
+services_status = check_service(servers_ip, services)
+print(services_status)
