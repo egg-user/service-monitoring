@@ -1,10 +1,16 @@
 import os
 import paramiko
 import getpass
+import datetime
+
+current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+current_date = datetime.datetime.now().date()
+
 
 base_path = os.getcwd()
 servers_path = os.path.join(base_path, "servers.txt")
 services_path = os.path.join(base_path, "services.txt")
+report_path = os.path.join(base_path, "report", f"service_monitor_{current_date}.txt")
 
 def read_servers_path():
     servers_ip = []
@@ -70,6 +76,32 @@ def evaluate_service_status(services_status):
             ))
     return services_status_evaluate
 
+def generate_report(services_status_evaluate):
+    previous_ip = ""
+    servers_count = []
+    healthy_count = []
+    warning_count = []
+    uncreachable_count = []
+    with open(report_path, "w") as file:
+        file.write(
+            "==================================================\n"
+            "SERVICE MONITORING REPORT\n"
+            "==================================================\n\n"
+            f"Generated: {current_time}\n\n"
+        )
+        for ip, service, service_status, health_status in services_status_evaluate:
+            if ip != previous_ip:
+                file.write(
+                    "--------------------------------------------------\n"
+                    f"Server : {ip}\n\n"
+                )
+                previous_ip = ip
+            else:
+                file.write(
+                    f"{service}     {service_status}    {health_status}\n"
+                )
+
+
                 
 
         
@@ -77,5 +109,4 @@ servers_ip = read_servers_path()
 services = read_services_path()
 services_status = check_service(servers_ip, services)
 services_status_evaluate = evaluate_service_status(services_status)
-
-print(services_status_evaluate)
+generate_report(services_status_evaluate)
